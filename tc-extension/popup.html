@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>T&C Summarizer</title>
+  <style>
+    body {
+      font-family: Arial;
+      width: 300px;
+      padding: 10px;
+      background: #f4f4f4;
+    }
+
+    button {
+      width: 100%;
+      padding: 10px;
+      background: blue;
+      color: white;
+      border: none;
+      cursor: pointer;
+      margin-bottom: 10px;
+    }
+
+    .box {
+      background: white;
+      padding: 10px;
+      margin-top: 10px;
+      border-radius: 5px;
+      font-size: 13px;
+      max-height: 120px;
+      overflow-y: auto;
+    }
+  </style>
+</head>
+<body>
+
+<h3>AI T&C Summarizer</h3>
+
+<button id="scanBtn">Scan Page</button>
+
+<div class="box">
+  <b>Summary:</b>
+  <div id="summary">-</div>
+</div>
+
+<div class="box">
+  <b>Risks:</b>
+  <div id="risks">-</div>
+</div>
+
+<div class="box">
+  <b>Risk Level:</b>
+  <div id="level">-</div>
+</div>
+
+<script src="popup.js"></script>
+
+</body>
+</html>
