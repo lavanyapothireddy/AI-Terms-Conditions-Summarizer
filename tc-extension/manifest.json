@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "AI T&C Summarizer",
   "version": "1.0",
-  "description": "Summarize Terms & Conditions using AI",
+  "description": "Summarize Terms & Conditions from any webpage",
   "permissions": ["activeTab", "scripting"],
   "host_permissions": [
     "https://ai-terms-conditions-summarizer.onrender.com/*"
