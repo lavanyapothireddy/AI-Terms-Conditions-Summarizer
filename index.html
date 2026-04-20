@@ -2,78 +2,36 @@
 <html>
 <head>
     <title>AI Terms & Conditions Summarizer</title>
-    <style>
-        body {
-            font-family: Arial;
-            background: #f4f4f4;
-            text-align: center;
-            padding: 30px;
-        }
-
-        textarea {
-            width: 80%;
-            height: 150px;
-            padding: 10px;
-            margin-bottom: 10px;
-        }
-
-        button {
-            padding: 10px 20px;
-            background: blue;
-            color: white;
-            border: none;
-            cursor: pointer;
-        }
-
-        .box {
-            margin-top: 20px;
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-        }
-
-        .risk {
-            color: red;
-        }
-    </style>
 </head>
 <body>
 
 <h2>📄 AI Terms & Conditions Summarizer</h2>
 
-<textarea id="inputText" placeholder="Paste Terms & Conditions here..."></textarea><br>
+<textarea id="inputText" rows="10" cols="60" placeholder="Paste Terms here..."></textarea><br><br>
 
 <button onclick="summarize()">Summarize</button>
 
-<div class="box">
-    <h3>Summary:</h3>
-    <pre id="summary">⏳ Waiting...</pre>
-</div>
+<h3>Summary:</h3>
+<pre id="summary"></pre>
 
-<div class="box">
-    <h3>⚠️ Risks:</h3>
-    <pre id="risks">None</pre>
-</div>
+<h3>⚠️ Risks:</h3>
+<pre id="risks"></pre>
 
-<div class="box">
-    <h3>📊 Risk Level:</h3>
-    <pre id="riskLevel">-</pre>
-</div>
+<h3>📊 Risk Level:</h3>
+<pre id="riskLevel"></pre>
 
 <script>
 async function summarize() {
     const text = document.getElementById("inputText").value;
 
     if (!text.trim()) {
-        alert("Please enter Terms & Conditions");
+        alert("Enter text first");
         return;
     }
 
-    document.getElementById("summary").innerText = "⏳ Processing...";
-    document.getElementById("risks").innerText = "";
-    document.getElementById("riskLevel").innerText = "";
+    document.getElementById("summary").innerText = "Processing...";
 
-    const response = await fetch("http://127.0.0.1:8000/summarize", {
+    const response = await fetch("https://YOUR_RENDER_URL.onrender.com/summarize", {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
@@ -84,13 +42,8 @@ async function summarize() {
     const data = await response.json();
 
     document.getElementById("summary").innerText = data.summary;
+    document.getElementById("risks").innerText = data.risks.join("\n");
     document.getElementById("riskLevel").innerText = data.risk_level;
-
-    if (data.risks.length > 0) {
-        document.getElementById("risks").innerText = data.risks.join("\n");
-    } else {
-        document.getElementById("risks").innerText = "✅ No major risks detected";
-    }
 }
 </script>
 
