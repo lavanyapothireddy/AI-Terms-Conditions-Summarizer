@@ -1,5 +1,6 @@
 fastapi
 uvicorn
-transformers
-torch
+transformers==4.36.2
+torch==2.1.2
 pydantic
+sentencepiece
