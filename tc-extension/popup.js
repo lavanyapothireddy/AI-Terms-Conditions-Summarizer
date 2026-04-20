@@ -10,7 +10,8 @@ async function scan() {
   level.innerText = "";
 
   try {
-    let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    let tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+    let tab = tabs[0];
 
     chrome.scripting.executeScript(
       {
@@ -18,6 +19,8 @@ async function scan() {
         func: () => document.body.innerText.slice(0, 5000),
       },
       async (results) => {
+
+        // ❗ Handle extension errors
         if (chrome.runtime.lastError) {
           summary.innerText = "Error: " + chrome.runtime.lastError.message;
           return;
@@ -37,7 +40,9 @@ async function scan() {
             "https://ai-terms-conditions-summarizer.onrender.com/summarize",
             {
               method: "POST",
-              headers: { "Content-Type": "application/json" },
+              headers: {
+                "Content-Type": "application/json"
+              },
               body: JSON.stringify({ text: text })
             }
           );
@@ -53,13 +58,14 @@ async function scan() {
           risks.innerText = data.risks.join("\n");
           level.innerText = data.risk_level;
 
-        } catch (err) {
+        } catch (error) {
           summary.innerText = "API connection failed";
         }
+
       }
     );
 
-  } catch (err) {
-    summary.innerText = "Extension error";
+  } catch (error) {
+    summary.innerText = "Extension failed";
   }
 }
