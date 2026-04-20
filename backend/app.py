@@ -15,7 +15,10 @@ app.add_middleware(
 )
 
 # Load model
-summarizer = pipeline("summarization", model="sshleifer/distilbart-cnn-12-6")
+summarizer = pipeline(
+    "summarization",
+    model="sshleifer/distilbart-cnn-12-6"
+)
 
 # Request schema
 class TextRequest(BaseModel):
