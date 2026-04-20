@@ -5,6 +5,7 @@ from transformers import pipeline
 
 app = FastAPI()
 
+# CORS (allow all)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -13,7 +14,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Lazy load model (VERY IMPORTANT for Render)
+# 🔥 Lazy load model (important for Render)
 summarizer = None
 
 def get_model():
@@ -22,20 +23,23 @@ def get_model():
         summarizer = pipeline(
             "summarization",
             model="t5-small",
-            device=-1  # CPU
+            device=-1
         )
     return summarizer
 
 
+# Request schema
 class TextRequest(BaseModel):
     text: str
 
 
+# 🔹 Split long text
 def split_text(text, max_words=400):
     words = text.split()
     return [" ".join(words[i:i+max_words]) for i in range(0, len(words), max_words)]
 
 
+# 🔹 Risk detection
 def detect_risks(text):
     text = text.lower()
     risks = []
@@ -46,14 +50,17 @@ def detect_risks(text):
         risks.append("⚠️ Account can be terminated anytime")
     if "collect" in text and "data" in text:
         risks.append("⚠️ Personal data may be collected")
-    if "auto renew" in text:
+    if "auto renew" in text or "auto-renew" in text:
         risks.append("⚠️ Subscription may auto-renew")
     if "cookies" in text:
-        risks.append("⚠️ Cookies track your activity")
+        risks.append("⚠️ Cookies are used to track activity")
+    if "arbitration" in text:
+        risks.append("⚠️ You may lose right to go to court")
 
     return risks
 
 
+# 🔹 Risk level
 def get_risk_level(risks):
     if len(risks) == 0:
         return "Low"
@@ -63,15 +70,21 @@ def get_risk_level(risks):
         return "High"
 
 
+# Home route
 @app.get("/")
 def home():
     return {"message": "API is running 🚀"}
 
 
+# 🔹 Main API
 @app.post("/summarize")
 def summarize(req: TextRequest):
     if not req.text.strip():
-        return {"summary": "Enter text", "risks": [], "risk_level": "Low"}
+        return {
+            "summary": "❌ Please enter some text",
+            "risks": [],
+            "risk_level": "Low"
+        }
 
     model = get_model()
 
@@ -79,18 +92,24 @@ def summarize(req: TextRequest):
     summaries = []
 
     for chunk in chunks:
-        result = model(chunk, max_length=80, min_length=25, do_sample=False)
+        result = model(
+            chunk,
+            max_length=80,
+            min_length=25,
+            do_sample=False
+        )
         summaries.append(result[0]['summary_text'])
 
     final_summary = " ".join(summaries)
 
+    # Convert to bullet points
     bullets = final_summary.split(". ")
-    formatted = "\n".join([f"- {b}" for b in bullets if b])
+    formatted = "\n".join([f"- {b.strip()}" for b in bullets if b.strip()])
 
     risks = detect_risks(req.text)
 
     return {
         "summary": formatted,
-        "risks": risks if risks else ["✅ No major risks"],
+        "risks": risks if risks else ["✅ No major risks detected"],
         "risk_level": get_risk_level(risks)
     }
