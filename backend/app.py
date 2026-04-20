@@ -75,3 +75,9 @@ def summarize(req: TextRequest):
         "risks": risks if risks else ["✅ No major risks detected"],
         "risk_level": risk_level
     }
+    summarizer = None
+
+@app.on_event("startup")
+def load_model():
+    global summarizer
+    summarizer = pipeline("summarization", model="sshleifer/distilbart-cnn-12-6")
