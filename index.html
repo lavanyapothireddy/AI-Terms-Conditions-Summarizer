@@ -55,14 +55,25 @@
     <pre id="risks">None</pre>
 </div>
 
+<div class="box">
+    <h3>📊 Risk Level:</h3>
+    <pre id="riskLevel">-</pre>
+</div>
+
 <script>
 async function summarize() {
     const text = document.getElementById("inputText").value;
 
+    if (!text.trim()) {
+        alert("Please enter Terms & Conditions");
+        return;
+    }
+
     document.getElementById("summary").innerText = "⏳ Processing...";
     document.getElementById("risks").innerText = "";
+    document.getElementById("riskLevel").innerText = "";
 
-    const response = await fetch("http://127.0.0.1:8001/summarize", {
+    const response = await fetch("http://127.0.0.1:8000/summarize", {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
@@ -73,6 +84,7 @@ async function summarize() {
     const data = await response.json();
 
     document.getElementById("summary").innerText = data.summary;
+    document.getElementById("riskLevel").innerText = data.risk_level;
 
     if (data.risks.length > 0) {
         document.getElementById("risks").innerText = data.risks.join("\n");
