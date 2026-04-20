@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 
-# Enable CORS
+# CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -14,20 +14,27 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Load model
-summarizer = pipeline(
-    "summarization",
-    model="sshleifer/distilbart-cnn-12-6"
-)
+# Load lighter model (better for deployment)
+summarizer = pipeline("summarization", model="t5-small")
 
 # Request schema
 class TextRequest(BaseModel):
     text: str
 
-# Risk Detection Function
+
+# 🔹 Split long text into chunks
+def split_text(text, max_words=400):
+    words = text.split()
+    chunks = []
+    for i in range(0, len(words), max_words):
+        chunks.append(" ".join(words[i:i + max_words]))
+    return chunks
+
+
+# 🔹 Risk Detection
 def detect_risks(text):
-    risks = []
     text = text.lower()
+    risks = []
 
     if "third party" in text:
         risks.append("⚠️ Data may be shared with third parties")
@@ -41,34 +48,63 @@ def detect_risks(text):
     if "collect" in text and "data" in text:
         risks.append("⚠️ Your personal data may be collected")
 
+    if "auto renew" in text or "auto-renew" in text:
+        risks.append("⚠️ Subscription may auto-renew")
+
+    if "location" in text or "track" in text:
+        risks.append("⚠️ Your activity/location may be tracked")
+
+    if "cookies" in text:
+        risks.append("⚠️ Cookies are used to track behavior")
+
+    if "arbitration" in text:
+        risks.append("⚠️ You may lose right to go to court")
+
+    if "binding" in text:
+        risks.append("⚠️ Terms are legally binding")
+
     return risks
 
-# Risk Level Function
+
+# 🔹 Risk Level
 def get_risk_level(risks):
     score = len(risks)
 
     if score == 0:
         return "Low"
-    elif score <= 2:
+    elif score <= 3:
         return "Medium"
     else:
         return "High"
 
-# API Endpoint
+
+# 🔹 API Endpoint
 @app.post("/summarize")
 def summarize(req: TextRequest):
-    result = summarizer(
-        req.text,
-        max_length=100,
-        min_length=30,
-        do_sample=False
-    )
+    if not req.text.strip():
+        return {
+            "summary": "❌ Please enter some text",
+            "risks": [],
+            "risk_level": "Low"
+        }
 
-    summary = result[0]['summary_text']
+    chunks = split_text(req.text)
+
+    summaries = []
+    for chunk in chunks:
+        result = summarizer(
+            chunk,
+            max_length=80,
+            min_length=25,
+            do_sample=False
+        )
+        summaries.append(result[0]['summary_text'])
+
+    final_summary = " ".join(summaries)
 
     # Convert to bullet points
-    bullets = summary.split(". ")
-    formatted = "\n".join([f"- {point.strip()}" for point in bullets if point])
+    bullets = final_summary.split(". ")
+    formatted = "\n".join([f"- {b.strip()}" for b in bullets if b.strip()])
 
     risks = detect_risks(req.text)
     risk_level = get_risk_level(risks)
@@ -78,9 +114,3 @@ def summarize(req: TextRequest):
         "risks": risks if risks else ["✅ No major risks detected"],
         "risk_level": risk_level
     }
-    summarizer = None
-
-@app.on_event("startup")
-def load_model():
-    global summarizer
-    summarizer = pipeline("summarization", model="sshleifer/distilbart-cnn-12-6")
