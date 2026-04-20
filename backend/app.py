@@ -15,7 +15,7 @@ app.add_middleware(
 )
 
 # Load model
-summarizer = pipeline("summarization", model="facebook/bart-large-cnn")
+summarizer = pipeline("summarization", model="sshleifer/distilbart-cnn-12-6")
 
 # Request schema
 class TextRequest(BaseModel):
