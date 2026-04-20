@@ -24,37 +24,42 @@ async function scan() {
         }
 
         if (!results || !results[0]) {
-          summary.innerText = "No content found on page";
+          summary.innerText = "No content found";
           return;
         }
 
         const text = results[0].result;
 
-        summary.innerText = "Contacting AI server... (first time may take 30s)";
+        summary.innerText = "Analyzing...";
 
         try {
-  const response = await fetch(
-    "https://ai-terms-conditions-summarizer.onrender.com/summarize",
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text: text }),
-    }
-  );
+          const response = await fetch(
+            "https://ai-terms-conditions-summarizer.onrender.com/summarize",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ text: text })
+            }
+          );
 
-  const data = await response.json();
+          if (!response.ok) {
+            summary.innerText = "Server error";
+            return;
+          }
 
-  summary.innerText = data.summary;
-  risks.innerText = data.risks.join("\n");
-  level.innerText = data.risk_level;
+          const data = await response.json();
 
-} catch (err) {
-  console.error("Fetch error:", err);
-  summary.innerText = "Error: " + err.message;
-}
+          summary.innerText = data.summary;
+          risks.innerText = data.risks.join("\n");
+          level.innerText = data.risk_level;
+
+        } catch (err) {
+          summary.innerText = "API connection failed";
+        }
+      }
     );
 
   } catch (err) {
-    summary.innerText = "Extension failed to run";
+    summary.innerText = "Extension error";
   }
 }
